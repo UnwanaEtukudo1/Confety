@@ -4,3 +4,5 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
 
 .workspace-event>.custom-cover{width:90px;height:75px;font-size:50px;border-radius:5px;flex-shrink:0}.workspace-event>img{flex-shrink:0}@media(max-width:420px){.workspace-event>.custom-cover{width:65px;height:65px}}
+
+@media(max-width:420px){.hero h1{font-size:58px}}
