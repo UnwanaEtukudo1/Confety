@@ -1,0 +1,8 @@
+{
+  "name": "confety",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Confety event platform local prototype",
+  "scripts": {"dev": "node server.mjs", "check": "node --check app.js && node --check server.mjs"},
+  "engines": {"node": ">=18"}
+}
