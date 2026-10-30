@@ -28,3 +28,10 @@ Events, prices, orders, and metrics are illustrative. Prices use demo USD. There
 Fonts load from Google Fonts, and sample images load from Unsplash and Pravatar. Network access is required for these visual assets; core functionality has no external dependency.
 
 Hosting is intentionally local for review. The public GitHub repository contains the source code only. Payment provider, production currency, authentication, event moderation, and hosting should be agreed before production implementation.
+
+## Design branches
+
+- `main`: original neon purple/pink design on dark backgrounds.
+- `codex/orange-lime-design`: warm ivory backgrounds, orange poster-style hero, lime accents, outlined cards, and hard shadows.
+
+Both branches retain the same event and ticket prototype features. Switch branches with Git and restart the preview server after switching. No designs have been merged into main.
