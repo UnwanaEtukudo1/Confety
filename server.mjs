@@ -2,11 +2,11 @@ import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 const root = new URL('./', import.meta.url);
-const files = {'/':'index.html','/index.html':'index.html','/styles.css':'styles.css','/app.js':'app.js'};
+const files = {'/':'index.html','/index.html':'index.html','/styles.css':'styles.css','/app.js':'app.js','/event-pages.js':'event-pages.js','/event-page.css':'event-page.css'};
 const types = {html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8'};
 const server = http.createServer(async(req,res)=>{
   const path = new URL(req.url,'http://localhost').pathname;
-  const file=files[path];
+  const file=files[path] || (/^\/events\/[a-zA-Z0-9-]+\/?$/.test(path)?'index.html':null);
   if(!file){res.writeHead(404);res.end('Not found');return;}
   try{const body=await readFile(fileURLToPath(new URL(file,root)));res.writeHead(200,{'Content-Type':types[file.split('.').pop()],'Cache-Control':'no-cache','X-Content-Type-Options':'nosniff'});res.end(body);}
   catch{res.writeHead(500);res.end('Unable to load page');}

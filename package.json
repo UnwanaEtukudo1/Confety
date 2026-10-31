@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "description": "Confety event platform local prototype",
-  "scripts": {"dev": "node server.mjs", "check": "node --check app.js && node --check server.mjs"},
-  "engines": {"node": ">=18"}
+  "scripts": {
+    "dev": "node server.mjs",
+    "check": "node --check app.js && node --check event-pages.js && node --check server.mjs",
+    "test": "node --test event-pages.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module"
 }
