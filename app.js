@@ -1,3 +1,4 @@
+import {createDemoAuth} from './demo-auth.js';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -19,6 +20,8 @@ let state = {
   favorites: Array.isArray(saved?.favorites) ? saved.favorites.filter(id => typeof id === 'string') : [],
   paused: Array.isArray(saved?.paused) ? saved.paused.filter(id => typeof id === 'string') : []
 };
+const demoAuth=createDemoAuth({local:{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)},session:{getItem:key=>sessionStorage.getItem(key),setItem:(key,value)=>sessionStorage.setItem(key,value),removeItem:key=>sessionStorage.removeItem(key)},crypto:window.crypto});
+let currentUser=demoAuth.currentUser(), authMode='login', authBusy=false;
 let category = 'All', view = 'discover', workspace = 'events', toastTimer;
 const allEvents = () => [...sampleEvents, ...state.events];
 const money = value => value === 0 ? 'Free' : new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(value);
@@ -39,7 +42,53 @@ function renderEvents(){
   $('#empty-events').hidden=events.length>0;
   $('#event-grid').innerHTML=events.map(event=>`<article class="event-card"><div class="card-cover" data-event="${escapeHtml(event.id)}">${cover(event)}<span class="card-category">${escapeHtml(event.category)}</span></div><button class="save-button ${state.favorites.includes(event.id)?'saved':''}" data-save="${escapeHtml(event.id)}" aria-label="${state.favorites.includes(event.id)?'Unsave':'Save'} ${escapeHtml(event.title)}" aria-pressed="${state.favorites.includes(event.id)}">${state.favorites.includes(event.id)?'♥':'♡'}</button><div class="card-content"><p class="card-date">${dateLabel(event.date)} · ${timeLabel(event.date)}</p><button class="card-title" data-event="${escapeHtml(event.id)}">${escapeHtml(event.title)}</button><p class="card-location">↗ ${escapeHtml(event.venue)} · ${escapeHtml(event.city)}</p><div class="card-bottom"><span class="card-price">${event.price?'<small>from</small>':''}${money(event.price)}</span><button class="card-link" data-event="${escapeHtml(event.id)}">${remaining(event)?'Get tickets ↗':'Sold out'}</button></div></div></article>`).join('');
 }
-function showView(next){view=next;$('#discover-view').hidden=next!=='discover';$('#dashboard-view').hidden=next!=='dashboard';$$('.site-header .nav-link').forEach(button=>button.classList.toggle('active',button.dataset.view===next));if(next==='dashboard')renderWorkspace();else renderEvents();window.scrollTo({top:0,behavior:'instant'});}
+function showView(next){
+  if(next==='account'&&!currentUser){showAuth('login');return;}
+  view=next;
+  for(const name of ['discover','dashboard','auth','account'])$('#'+name+'-view').hidden=next!==name;
+  $$('.site-header .nav-link').forEach(button=>button.classList.toggle('active',button.dataset.view===next));
+  if(next==='dashboard')renderWorkspace();if(next==='discover')renderEvents();if(next==='account')renderAccount();
+  if(next!=='auth')history.replaceState(null,'',next==='account'?'#account':location.pathname+location.search);
+  window.scrollTo({top:0,behavior:'instant'});
+}
+function updateAccountNav(){const button=$('#account-nav');button.textContent=currentUser?'My account ↗':'Log in ↗';}
+function showAuth(mode){
+  if(currentUser){showView('account');return;}
+  if(authBusy)return;
+  authMode=mode==='signup'?'signup':'login';const signup=authMode==='signup',form=$('#auth-form');
+  form.reset();$('#auth-error').hidden=true;
+  $('#signup-name-label').hidden=!signup;form.elements.name.disabled=!signup;form.elements.name.required=signup;
+  $('#signup-confirm-group').hidden=!signup;form.elements.confirm.disabled=!signup;form.elements.confirm.required=signup;
+  form.elements.password.minLength=signup?8:1;
+  $$('#auth-form input').forEach(input=>{input.setCustomValidity('');if(input.name==='password'||input.name==='confirm')input.type='password';});
+  $$('.password-toggle').forEach(button=>{button.textContent='Show';button.setAttribute('aria-pressed','false');button.setAttribute('aria-label',button.dataset.password==='auth-password'?'Show demo password':'Show password confirmation');});
+  $$('.auth-tabs [data-auth]').forEach(button=>{const active=button.dataset.auth===authMode;button.classList.toggle('selected',active);button.setAttribute('aria-pressed',String(active));});
+  $('#auth-eyebrow').textContent=signup?'THERE’S ALWAYS ROOM FOR ONE MORE':'GOOD TO HAVE YOU BACK';
+  $('#auth-title').innerHTML=signup?'Find your people.<br>Make it Confety.':'Your next chapter<br>is waiting.';
+  $('#auth-intro').textContent=signup?'Create your demo profile. A world of good times awaits.':'Log in to your demo profile and get back to the good times.';
+  $('#password-help').textContent=signup?'8–128 characters. Use a made-up password for this demo.':'Use the demo password you created in this browser.';
+  $('#auth-submit').innerHTML=signup?'Create demo account <span>↗</span>':'Log in <span>↗</span>';
+  $('#auth-switch').innerHTML=signup?'Already part of the party? <button data-auth="login">Log in</button>':'New around here? <button data-auth="signup">Create an account</button>';
+  showView('auth');history.replaceState(null,'','#'+authMode);$('#auth-title').focus({preventScroll:true});
+}
+function renderAccount(){
+  if(!currentUser)return;
+  $('#account-view').innerHTML=`<div class="account-welcome"><div><div class="eyebrow pink-text">YOUR LITTLE CORNER OF CONFETY</div><h1>Hey, ${escapeHtml(currentUser.name.split(' ')[0])}<span>✳</span></h1><p>You’re in. Let’s make some memories.</p></div><button class="outline-button" data-logout>Log out ↗</button></div><div class="account-layout"><section class="profile-card"><span class="profile-avatar">${escapeHtml(currentUser.name.slice(0,1).toUpperCase())}</span><span class="tiny-tag">DEMO PROFILE</span><h2>${escapeHtml(currentUser.name)}</h2><p>${escapeHtml(currentUser.email)}</p><div class="profile-divider"></div><p>This profile is saved in this browser. Your demo session ends when you log out or close this tab.</p></section><section class="account-next"><div class="eyebrow pink-text">KEEP THE GOOD TIMES COMING</div><h2>A whole lot of<br><em>“you had to be there.”</em></h2><p>Find your next experience, bring your people, and make a plan worth looking forward to.</p><button class="button lime" data-view="discover">Discover experiences <span>↗</span></button><div class="demo-notice">Demo account preview · Event data and the organizer workspace remain shared within this browser. This profile does not provide private access to bookings.</div></section></div>`;
+}
+$('#auth-form').addEventListener('submit',async event=>{
+  event.preventDefault();if(authBusy)return;const form=event.currentTarget;if(!form.reportValidity())return;
+  const data=new FormData(form),signup=authMode==='signup';
+  if(signup&&data.get('password')!==data.get('confirm')){form.elements.confirm.setCustomValidity('Your demo passwords don’t match.');form.elements.confirm.reportValidity();return;}
+  const button=$('#auth-submit');authBusy=true;button.disabled=true;button.textContent=signup?'Creating your demo profile…':'Logging you in…';$('#auth-error').hidden=true;
+  $$('.auth-tabs button').forEach(b=>b.disabled=true);
+  try{
+    currentUser=await demoAuth[signup?'register':'login']({name:String(data.get('name')||''),email:String(data.get('email')),password:String(data.get('password'))});
+    form.reset();updateAccountNav();showView('account');toast(signup?'Welcome to your Confety demo profile.':'Welcome back. Good times ahead.');
+  }catch(error){$('#auth-error').textContent=error.message||'The demo could not sign you in. Please try again.';$('#auth-error').hidden=false;}
+  finally{authBusy=false;button.disabled=false;button.innerHTML=signup?'Create demo account <span>↗</span>':'Log in <span>↗</span>';$$('.auth-tabs button').forEach(b=>b.disabled=false);}
+});
+$('#auth-form').addEventListener('input',()=>{$('#auth-form').elements.confirm.setCustomValidity('');$('#auth-error').hidden=true;});
+
 function openDialog(id){const dialog=$(id);dialog.showModal();dialog.scrollTop=0;}
 function showEvent(id){
   const event=allEvents().find(e=>e.id===id);if(!event)return;
@@ -52,6 +101,7 @@ function checkout(id){
   $('#event-dialog').close();
   const max=Math.min(10,remaining(event));
   $('#checkout-content').innerHTML=`<div class="dialog-heading"><div class="eyebrow pink-text">YOU + GOOD TIMES = YES.</div><h2>Save your spot.</h2><p>Simulated checkout · No card required. No charge.</p></div><div class="checkout-summary"><h3>${escapeHtml(event.title)}</h3><p>${dateLabel(event.date)} · ${timeLabel(event.date)}<br>${escapeHtml(event.venue)}, ${escapeHtml(event.city)}</p></div><form id="checkout-form"><input type="hidden" name="eventId" value="${escapeHtml(event.id)}"><label>Your name<input name="name" autocomplete="name" required maxlength="80" placeholder="Name on your tickets"></label><label>Email address<input name="email" type="email" autocomplete="email" required maxlength="150" placeholder="you@example.com"></label><label>Tickets<select name="quantity" id="checkout-quantity">${Array.from({length:max},(_,i)=>`<option value="${i+1}">${i+1} ticket${i?'s':''} · ${money(event.price*(i+1))}</option>`).join('')}</select></label><div class="checkout-total"><span>Demo total</span><span id="checkout-total">${money(event.price)}</span></div><p class="form-note">Prices use USD for demonstration. Your demo order stays in this browser. No email or valid admission ticket will be issued.</p><button type="submit" class="button lime full">Confirm demo order ↗</button></form>`;
+  if(currentUser){$('#checkout-form').elements.name.value=currentUser.name;$('#checkout-form').elements.email.value=currentUser.email;}
   $('#checkout-quantity').addEventListener('change',e=>$('#checkout-total').textContent=money(event.price*Number(e.target.value)));
   $('#checkout-form').addEventListener('submit',submitOrder);
   openDialog('#checkout-dialog');
@@ -85,6 +135,9 @@ function exportOrders(){
 }
 document.addEventListener('click',event=>{
   const target=event.target.closest('button,a,[data-event]');if(!target)return;
+  if(target.matches('[data-auth]')){if(target.id==='account-nav'&&currentUser)showView('account');else showAuth(target.dataset.auth);}
+  if(target.matches('[data-logout]')){try{demoAuth.logout();currentUser=null;updateAccountNav();showAuth('login');toast('You’ve logged out of your demo profile.');}catch(error){toast(error.message);}}
+  if(target.matches('[data-password]')){const input=document.getElementById(target.dataset.password),show=input.type==='password';input.type=show?'text':'password';target.textContent=show?'Hide':'Show';target.setAttribute('aria-pressed',String(show));target.setAttribute('aria-label',(show?'Hide':'Show')+(input.name==='confirm'?' password confirmation':' demo password'));}
   if(target.matches('[data-view]')){event.preventDefault();showView(target.dataset.view);}
   if(target.matches('.logo')){event.preventDefault();showView('discover');}
   if(target.matches('[data-category]')){category=target.dataset.category;$$('[data-category]').forEach(b=>b.classList.toggle('selected',b===target));renderEvents();}
@@ -106,3 +159,6 @@ $('#create-form').addEventListener('submit',event=>{
 });
 $$('dialog').forEach(dialog=>dialog.addEventListener('click',event=>{if(event.target===dialog){const bounds=dialog.getBoundingClientRect();if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)dialog.close();}}));
 renderEvents();
+updateAccountNav();
+if(location.hash==='#login'||location.hash==='#signup')showAuth(location.hash.slice(1));
+if(location.hash==='#account')showView('account');
