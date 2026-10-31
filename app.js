@@ -1,3 +1,4 @@
+import {initResale} from './resale-ui.js';
 import {createDemoAuth} from './demo-auth.js';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -45,10 +46,10 @@ function renderEvents(){
 function showView(next){
   if(next==='account'&&!currentUser){showAuth('login');return;}
   view=next;
-  for(const name of ['discover','dashboard','auth','account'])$('#'+name+'-view').hidden=next!==name;
+  for(const name of ['discover','dashboard','auth','account','marketplace','sell'])$('#'+name+'-view').hidden=next!==name;
   $$('.site-header .nav-link').forEach(button=>button.classList.toggle('active',button.dataset.view===next));
-  if(next==='dashboard')renderWorkspace();if(next==='discover')renderEvents();if(next==='account')renderAccount();
-  if(next!=='auth')history.replaceState(null,'',next==='account'?'#account':location.pathname+location.search);
+  if(next==='dashboard')renderWorkspace();if(next==='discover')renderEvents();if(next==='account')renderAccount();if(next==='marketplace')resaleUi.renderMarket();if(next==='sell')resaleUi.renderSeller();
+  if(next!=='auth')history.replaceState(null,'',['account','marketplace','sell'].includes(next)?'#'+next:location.pathname+location.search);
   window.scrollTo({top:0,behavior:'instant'});
 }
 function updateAccountNav(){const button=$('#account-nav');button.textContent=currentUser?'My account ↗':'Log in ↗';}
@@ -73,7 +74,7 @@ function showAuth(mode){
 }
 function renderAccount(){
   if(!currentUser)return;
-  $('#account-view').innerHTML=`<div class="account-welcome"><div><div class="eyebrow pink-text">YOUR LITTLE CORNER OF CONFETY</div><h1>Hey, ${escapeHtml(currentUser.name.split(' ')[0])}<span>✳</span></h1><p>You’re in. Let’s make some memories.</p></div><button class="outline-button" data-logout>Log out ↗</button></div><div class="account-layout"><section class="profile-card"><span class="profile-avatar">${escapeHtml(currentUser.name.slice(0,1).toUpperCase())}</span><span class="tiny-tag">DEMO PROFILE</span><h2>${escapeHtml(currentUser.name)}</h2><p>${escapeHtml(currentUser.email)}</p><div class="profile-divider"></div><p>This profile is saved in this browser. Your demo session ends when you log out or close this tab.</p></section><section class="account-next"><div class="eyebrow pink-text">KEEP THE GOOD TIMES COMING</div><h2>A whole lot of<br><em>“you had to be there.”</em></h2><p>Find your next experience, bring your people, and make a plan worth looking forward to.</p><button class="button lime" data-view="discover">Discover experiences <span>↗</span></button><div class="demo-notice">Demo account preview · Event data and the organizer workspace remain shared within this browser. This profile does not provide private access to bookings.</div></section></div>`;
+  $('#account-view').innerHTML=`<div class="account-welcome"><div><div class="eyebrow pink-text">YOUR LITTLE CORNER OF CONFETY</div><h1>Hey, ${escapeHtml(currentUser.name.split(' ')[0])}<span>✳</span></h1><p>You’re in. Let’s make some memories.</p></div><button class="outline-button" data-logout>Log out ↗</button></div><div class="account-layout"><section class="profile-card"><span class="profile-avatar">${escapeHtml(currentUser.name.slice(0,1).toUpperCase())}</span><span class="tiny-tag">DEMO PROFILE</span><h2>${escapeHtml(currentUser.name)}</h2><p>${escapeHtml(currentUser.email)}</p><div class="profile-divider"></div><p>This profile is saved in this browser. Your demo session ends when you log out or close this tab.</p></section><section class="account-next"><div class="eyebrow pink-text">KEEP THE GOOD TIMES COMING</div><h2>A whole lot of<br><em>“you had to be there.”</em></h2><p>Find your next experience, bring your people, and make a plan worth looking forward to.</p><button class="button lime" data-view="discover">Discover experiences <span>↗</span></button><div class="account-resale-actions"><button class="outline-button" data-view="sell">My tickets & listings ↗</button><button class="outline-button" data-view="marketplace">Explore resale ↗</button></div><div class="demo-notice">Demo account preview · Event data and the organizer workspace remain shared within this browser. This profile does not provide private access to bookings.</div></section></div>`;
 }
 $('#auth-form').addEventListener('submit',async event=>{
   event.preventDefault();if(authBusy)return;const form=event.currentTarget;if(!form.reportValidity())return;
@@ -83,7 +84,7 @@ $('#auth-form').addEventListener('submit',async event=>{
   $$('.auth-tabs button').forEach(b=>b.disabled=true);
   try{
     currentUser=await demoAuth[signup?'register':'login']({name:String(data.get('name')||''),email:String(data.get('email')),password:String(data.get('password'))});
-    form.reset();updateAccountNav();showView('account');toast(signup?'Welcome to your Confety demo profile.':'Welcome back. Good times ahead.');
+    form.reset();updateAccountNav();if(!resaleUi.resumeAfterLogin())showView('account');toast(signup?'Welcome to your Confety demo profile.':'Welcome back. Good times ahead.');
   }catch(error){$('#auth-error').textContent=error.message||'The demo could not sign you in. Please try again.';$('#auth-error').hidden=false;}
   finally{authBusy=false;button.disabled=false;button.innerHTML=signup?'Create demo account <span>↗</span>':'Log in <span>↗</span>';$$('.auth-tabs button').forEach(b=>b.disabled=false);}
 });
@@ -100,7 +101,7 @@ function checkout(id){
   const event=allEvents().find(e=>e.id===id);if(!event||state.paused.includes(id)||remaining(event)<1)return;
   $('#event-dialog').close();
   const max=Math.min(10,remaining(event));
-  $('#checkout-content').innerHTML=`<div class="dialog-heading"><div class="eyebrow pink-text">YOU + GOOD TIMES = YES.</div><h2>Save your spot.</h2><p>Simulated checkout · No card required. No charge.</p></div><div class="checkout-summary"><h3>${escapeHtml(event.title)}</h3><p>${dateLabel(event.date)} · ${timeLabel(event.date)}<br>${escapeHtml(event.venue)}, ${escapeHtml(event.city)}</p></div><form id="checkout-form"><input type="hidden" name="eventId" value="${escapeHtml(event.id)}"><label>Your name<input name="name" autocomplete="name" required maxlength="80" placeholder="Name on your tickets"></label><label>Email address<input name="email" type="email" autocomplete="email" required maxlength="150" placeholder="you@example.com"></label><label>Tickets<select name="quantity" id="checkout-quantity">${Array.from({length:max},(_,i)=>`<option value="${i+1}">${i+1} ticket${i?'s':''} · ${money(event.price*(i+1))}</option>`).join('')}</select></label><div class="checkout-total"><span>Demo total</span><span id="checkout-total">${money(event.price)}</span></div><p class="form-note">Prices use USD for demonstration. Your demo order stays in this browser. No email or valid admission ticket will be issued.</p><button type="submit" class="button lime full">Confirm demo order ↗</button></form>`;
+  $('#checkout-content').innerHTML=`<div class="dialog-heading"><div class="eyebrow pink-text">YOU + GOOD TIMES = YES.</div><h2>Save your spot.</h2><p>Simulated checkout · No card required. No charge.</p></div><div class="checkout-summary"><h3>${escapeHtml(event.title)}</h3><p>${dateLabel(event.date)} · ${timeLabel(event.date)}<br>${escapeHtml(event.venue)}, ${escapeHtml(event.city)}</p></div><form id="checkout-form"><input type="hidden" name="eventId" value="${escapeHtml(event.id)}"><label>Your name<input name="name" autocomplete="name" required maxlength="80" placeholder="Name on your tickets"></label><label>Email address<input name="email" type="email" autocomplete="email" required maxlength="150" placeholder="you@example.com"></label><label>Tickets<select name="quantity" id="checkout-quantity">${Array.from({length:max},(_,i)=>`<option value="${i+1}">${i+1} ticket${i?'s':''} · ${money(event.price*(i+1))}</option>`).join('')}</select></label><div class="checkout-total"><span>Demo total</span><span id="checkout-total">${money(event.price)}</span></div><p class="form-note">Prices use USD for demonstration. Your demo order stays in this browser. No email or valid admission ticket will be issued. ${currentUser?'This purchase will belong to your demo profile and can be listed for resale.':'Guest purchases cannot be resold. Close checkout and log in before buying if you want to try resale.'}</p><button type="submit" class="button lime full">Confirm demo order ↗</button></form>`;
   if(currentUser){$('#checkout-form').elements.name.value=currentUser.name;$('#checkout-form').elements.email.value=currentUser.email;}
   $('#checkout-quantity').addEventListener('change',e=>$('#checkout-total').textContent=money(event.price*Number(e.target.value)));
   $('#checkout-form').addEventListener('submit',submitOrder);
@@ -108,9 +109,10 @@ function checkout(id){
 }
 function submitOrder(event){
   event.preventDefault();const form=event.currentTarget;if(!form.reportValidity())return;
+  try{const latest=JSON.parse(localStorage.getItem('confety-prototype-v1')||'null');if(Array.isArray(latest?.orders))state.orders=latest.orders;}catch{}
   const data=new FormData(form),item=allEvents().find(e=>e.id===data.get('eventId')),quantity=Number(data.get('quantity'));
   if(!item||!Number.isInteger(quantity)||quantity<1||quantity>10||quantity>remaining(item)||state.paused.includes(item.id)){toast('These tickets are no longer available. Please try again.');$('#checkout-dialog').close();return;}
-  const order={id:`CF-${crypto.randomUUID().slice(0,8).toUpperCase()}`,eventId:item.id,name:String(data.get('name')).trim(),email:String(data.get('email')).trim(),quantity,total:Math.round(item.price*quantity*100)/100,createdAt:new Date().toISOString()};
+  const order={ownerId:currentUser?.id||null,id:`CF-${crypto.randomUUID().slice(0,8).toUpperCase()}`,eventId:item.id,name:String(data.get('name')).trim(),email:String(data.get('email')).trim(),quantity,total:Math.round(item.price*quantity*100)/100,createdAt:new Date().toISOString()};
   if(!order.name){form.elements.name.setCustomValidity('Please enter your name.');form.elements.name.reportValidity();form.elements.name.addEventListener('input',()=>form.elements.name.setCustomValidity(''),{once:true});return;}
   state.orders.push(order);persist();renderEvents();renderWorkspace();
   $('#checkout-content').innerHTML=`<div class="confirmation"><div class="success-mark">✓</div><div class="eyebrow pink-text">THAT’S A PLAN.</div><h2>You’re on the list.</h2><p>${escapeHtml(order.name)}, your demo order for <strong>${escapeHtml(item.title)}</strong> is saved.<br>${quantity} ticket${quantity>1?'s':''} · ${money(order.total)}</p><p class="ticket-reference">${order.id}</p><p class="form-note">Demo only. This reference is not valid for admission. No email has been sent. Find this order in your organizer workspace.</p><button class="button lime full" id="view-order-button">View demo orders ↗</button></div>`;
@@ -158,7 +160,10 @@ $('#create-form').addEventListener('submit',event=>{
   persist();form.reset();$('#create-dialog').close();workspace='events';showView('dashboard');toast('Your event is live in the local prototype. Let’s make memories.');
 });
 $$('dialog').forEach(dialog=>dialog.addEventListener('click',event=>{if(event.target===dialog){const bounds=dialog.getBoundingClientRect();if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)dialog.close();}}));
+const resaleUi=initResale({getUser:()=>currentUser,getEvents:allEvents,money,dateLabel,timeLabel,cover,escapeHtml,showView,showAuth,toast});
 renderEvents();
 updateAccountNav();
 if(location.hash==='#login'||location.hash==='#signup')showAuth(location.hash.slice(1));
 if(location.hash==='#account')showView('account');
+
+if(location.hash==='#marketplace'||location.hash==='#sell')showView(location.hash.slice(1));

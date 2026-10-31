@@ -1,0 +1,31 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {emptyMarket,ticketSources,createListing,buyListing,withdrawListing} from './resale.js';
+const seller={id:'seller',name:'Demo Seller'},buyer={id:'buyer',name:'Demo Buyer'},events=[{id:'event',date:'2035-11-01T20:00'}],orders=[{id:'order',ownerId:'seller',eventId:'event',quantity:4,total:100}],now=Date.parse('2030-01-01');
+test('listing reserves inventory, partial purchase transfers ownership, withdrawal returns only unsold tickets',()=>{
+  let {market}=createListing(emptyMarket(),orders,events,seller,{sourceId:'order',quantity:3,unitPriceCents:2000},'listing',now);
+  assert.equal(ticketSources(market,orders,seller)[0].available,1);
+  assert.throws(()=>createListing(market,orders,events,seller,{sourceId:'order',quantity:2,unitPriceCents:2000},'duplicate',now),/quantity/);
+  ({market}=buyListing(market,orders,events,buyer,{listingId:'listing',quantity:2},'sale',now));
+  assert.equal(market.sales[0].totalCents,4000);assert.equal(market.listings[0].remaining,1);
+  assert.equal(ticketSources(market,orders,buyer)[0].owned,2);
+  market=withdrawListing(market,seller,'listing');
+  assert.equal(ticketSources(market,orders,seller)[0].available,2);
+  assert.throws(()=>buyListing(market,orders,events,buyer,{listingId:'listing',quantity:1},'late',now),/no longer available/);
+  ({market}=createListing(market,orders,events,buyer,{sourceId:'sale',quantity:1,unitPriceCents:1900},'relist',now));
+  assert.equal(ticketSources(market,orders,buyer)[0].available,1);
+});
+test('ownership, own-purchase, expired events, invalid prices and stale purchases are rejected',()=>{
+  assert.throws(()=>createListing(emptyMarket(),orders,events,buyer,{sourceId:'order',quantity:1,unitPriceCents:1000},'x',now),/signed-in/);
+  assert.throws(()=>createListing(emptyMarket(),orders,events,seller,{sourceId:'order',quantity:1,unitPriceCents:-1},'x',now),/price/);
+  assert.throws(()=>createListing(emptyMarket(),orders,events,seller,{sourceId:'order',quantity:1,unitPriceCents:100},'x',Date.parse('2040-01-01')),/already started/);
+  let {market}=createListing(emptyMarket(),orders,events,seller,{sourceId:'order',quantity:1,unitPriceCents:1000},'l',now);
+  assert.throws(()=>withdrawListing(market,buyer,'l'),/Only the seller/);
+  assert.throws(()=>buyListing(market,orders,events,seller,{listingId:'l',quantity:1},'s',now),/own listing/);
+  assert.throws(()=>buyListing(market,orders,events,buyer,{listingId:'l',quantity:1.5},'s',now),/quantity/);
+  ({market}=buyListing(market,orders,events,buyer,{listingId:'l',quantity:1},'s',now));
+  assert.equal(market.listings[0].status,'sold');
+  assert.throws(()=>buyListing(market,orders,events,buyer,{listingId:'l',quantity:1},'s2',now),/no longer available/);
+  assert.equal(ticketSources(market,orders,seller)[0].available,3);
+  assert.equal(ticketSources(market,orders,{id:'guest'}) .length,0);
+});

@@ -5,8 +5,8 @@
   "description": "Confety event platform local prototype",
   "scripts": {
     "dev": "node server.mjs",
-    "check": "node --check app.js && node --check demo-auth.js && node --check server.mjs",
-    "test": "node --test demo-auth.test.mjs"
+    "check": "node --check app.js && node --check demo-auth.js && node --check resale.js && node --check resale-ui.js && node --check server.mjs",
+    "test": "node --test demo-auth.test.mjs resale.test.mjs"
   },
   "engines": {
     "node": ">=18"
