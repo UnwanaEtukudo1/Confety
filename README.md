@@ -28,3 +28,11 @@ Events, prices, orders, and metrics are illustrative. Prices use demo USD. There
 Fonts load from Google Fonts, and sample images load from Unsplash and Pravatar. Network access is required for these visual assets; core functionality has no external dependency.
 
 Hosting is intentionally local for review. The public GitHub repository contains the source code only. Payment provider, production currency, authentication, event moderation, and hosting should be agreed before production implementation.
+
+### Final admin workspace
+
+Run `npm ci` and `npm run dev`, then open `http://127.0.0.1:4173/admin`. The workspace has 16 admin sections and stores edits and its audit trail in the current browser. Use the demo role control to test permissions. A synthetic historical reporting dataset is available under Analytics & reporting.
+
+The admin ledger is separate from the public prototype. Gateway, payout, account reset, role, delivery, and third-party workflows run locally as simulations. Schedules can be exercised with the relevant simulate action. The QR scanner reads locally from a camera or image with jsQR, with manual reference entry available. Report exports include PDF, CSV, and Excel-compatible SpreadsheetML.
+
+Use Security & compliance to back up or restore the synthetic ledger. Import templates and reference guides are available under Support & system tools. Use fictional records in this demo.

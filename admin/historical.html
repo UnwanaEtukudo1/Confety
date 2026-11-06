@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#18121f">
+  <title>Admin workspace · Confety</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/admin/historical.css">
+  <script type="module" src="/admin/historical.mjs"></script>
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <a class="logo" href="/admin" aria-label="Confety home">confety<span aria-hidden="true">✳</span></a>
+      <div class="admin-sidebar-label">WORKSPACE</div>
+      <nav aria-label="Admin reports">
+        <button type="button" data-report="overview" aria-current="page"><span aria-hidden="true">◈</span> Overview</button>
+        <button type="button" data-report="events"><span aria-hidden="true">▥</span> Event demand</button>
+        <button type="button" data-report="timing"><span aria-hidden="true">◷</span> Purchase timing</button>
+        <button type="button" data-report="customers"><span aria-hidden="true">◉</span> Customers</button>
+        <button type="button" data-report="organizers"><span aria-hidden="true">✳</span> Organizers</button>
+        <button type="button" data-report="event"><span aria-hidden="true">↗</span> Event detail</button>
+      </nav>
+      <div class="admin-sidebar-bottom">
+        <span class="admin-badge"><i></i> Demo workspace</span>
+        <a href="/admin">← Back to admin workspace</a>
+      </div>
+    </aside>
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <span>Confety / <strong>Historical insights</strong></span>
+        <span class="admin-badge"><i></i> Synthetic data</span>
+      </header>
+      <div class="admin-heading">
+        <div class="eyebrow pink-text" id="report-kicker">CONFETY INSIGHTS</div>
+        <h1 id="report-title">Overview</h1>
+        <p id="report-description">See how events are performing and where customers need a better experience.</p>
+      </div>
+      <form class="admin-filters" id="admin-filters" aria-label="Report filters">
+        <label>Event year<select id="filter-year"><option>2026</option><option>2025</option><option>2024</option></select></label>
+        <label>Event months<select id="filter-months"><option value="10">January–October</option><option value="12">Full year</option></select></label>
+        <label>Host city<select id="filter-city"><option value="">All cities</option></select></label>
+        <label>Category<select id="filter-category"><option value="">All categories</option></select></label>
+        <button type="reset" class="outline-button">Reset filters</button>
+      </form>
+      <p class="admin-scope" id="admin-scope" aria-live="polite"></p>
+      <div id="admin-report"></div>
+      <details class="admin-method">
+        <summary>Metric definitions and demo data</summary>
+        <ul>
+          <li>Filters select events by their start date, host city, and category. Sales and booking timestamps belong to those events and can fall before the selected event period. Local times are West Africa Time (UTC+1).</li>
+          <li>The synthetic dataset runs from January 2024 to October 2026. Year-over-year comparisons use the same event months and filters. Seasonality uses the two complete years, 2024 and 2025.</li>
+          <li>Gross ticket sales are after discounts and before refunds or fees. Refund totals include refunded fees. Net ticket sales exclude fees. Net customer spend includes retained fees. Resale is separate from primary sales and does not add tickets or check-ins.</li>
+          <li>Buyers are distinct primary purchasers. Attendees are distinct people with a check-in. Check-ins count visits, so one person can account for multiple visits across events. Attendance rate uses issued tickets after refunds.</li>
+          <li>Gender is recorded on every synthetic customer profile. The report uses aggregate attendee counts and hides the distribution if any represented group has fewer than five people. Survey ratings use responses only. Response rates use invited buyers or organizer event surveys.</li>
+          <li>The funnel counts recorded page views and checkout attempts, so it measures activity rather than unique visitors. First-time and repeat orders use the buyer’s purchase history across the full demo dataset.</li>
+        </ul>
+      </details>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17121e">
+  <title>Confety Admin · Demo workspace</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/admin/workspace.css">
+  <script defer src="/admin/vendor/jsqr.js"></script>
+  <script defer src="/admin/vendor/qrcode.js"></script>
+  <script type="module" src="/admin/workspace.mjs"></script>
+</head>
+<body class="workspace-body">
+  <div class="workspace-shell">
+    <aside class="workspace-sidebar">
+      <a class="logo" href="/" aria-label="Confety home">confety<span aria-hidden="true">✳</span></a>
+      <p class="nav-caption">ADMIN WORKSPACE</p>
+      <nav id="section-nav" aria-label="Admin sections"></nav>
+      <a class="back-link" href="/">← Public site</a>
+    </aside>
+    <main class="workspace-main">
+      <header class="workspace-topbar">
+        <span>Confety <span aria-hidden="true">/</span> Administration</span>
+        <div>
+          <button type="button" class="workspace-button small" data-command="search">⌕ Global search</button>
+          <span class="demo-badge"><i></i> Demo data</span>
+          <button type="button" class="workspace-button small" id="role-chip" data-command="role-preview">Super admin</button>
+        </div>
+      </header>
+      <div id="workspace-page"></div>
+    </main>
+  </div>
+  <dialog id="workspace-dialog" class="workspace-dialog" aria-labelledby="dialog-title">
+    <header><h2 id="dialog-title"></h2><button type="button" class="workspace-button icon" data-close aria-label="Close dialog">×</button></header>
+    <div id="dialog-body"></div>
+    <p id="dialog-error" role="alert" hidden></p>
+  </dialog>
+  <div id="workspace-toast" role="status" aria-live="polite"></div>
+  <noscript><p>The admin workspace requires JavaScript.</p></noscript>
+</body>
+</html>
