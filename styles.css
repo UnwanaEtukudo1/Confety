@@ -6,3 +6,156 @@
 .workspace-event>.custom-cover{width:90px;height:75px;font-size:50px;border-radius:5px;flex-shrink:0}.workspace-event>img{flex-shrink:0}@media(max-width:420px){.workspace-event>.custom-cover{width:65px;height:65px}}
 
 @media(max-width:420px){.hero h1{font-size:58px}}
+
+.site-footer {
+  display: block;
+  max-width: 1350px;
+  margin-inline: max(5%, calc((100% - 1350px) / 2));
+  padding: 38px 0 23px;
+}
+
+.footer-main {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(0, 4fr);
+  gap: clamp(24px, 5vw, 70px);
+}
+
+.footer-brand p {
+  margin-top: 14px;
+  line-height: 1.7;
+}
+
+.footer-navigation h2 {
+  margin: 0 0 22px;
+  font-size: 24px;
+  letter-spacing: -.5px;
+}
+
+.footer-groups {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.site-footer h3 {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.site-footer ul {
+  list-style: none;
+  margin: 9px 0 0;
+  padding: 0;
+}
+
+.footer-groups a {
+  display: inline-block;
+  padding: 7px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.site-footer a:hover, .help-page a:hover {
+  color: var(--pink);
+}
+
+.footer-social {
+  margin-top: 31px;
+  padding: 22px 0;
+  border-block: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.footer-social nav, .footer-social ul, .footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-social nav { gap: 14px; }
+.footer-social ul { margin: 0; }
+.footer-social p { flex-basis: auto; }
+
+.footer-social a {
+  display: inline-block;
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.footer-social a:hover { border-color: var(--pink); }
+
+.footer-bottom {
+  justify-content: space-between;
+  padding-top: 20px;
+  color: var(--muted);
+}
+
+.footer-bottom .footer-link { padding: 6px 0; }
+
+.help-page {
+  width: min(90%, 860px);
+  margin: 18px auto 75px;
+}
+
+.help-back { color: var(--muted); font-size: 12px; }
+.help-intro { margin: 32px 0; }
+.help-intro h1 { font-size: clamp(36px, 6vw, 62px); letter-spacing: -.035em; margin: 12px 0; }
+.help-intro p, .help-sections p, .help-social dd { color: var(--muted); line-height: 1.7; }
+
+.help-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.help-sections section {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 8px;
+  padding: clamp(18px, 3vw, 28px);
+  scroll-margin-top: 12px;
+}
+
+.help-sections :target { outline: 2px solid var(--pink); outline-offset: 3px; }
+.help-sections section:first-child, .help-sections .help-social { grid-column: 1 / -1; }
+.help-sections h2 { margin-bottom: 12px; font-size: 23px; letter-spacing: -.4px; }
+.help-sections a { display: inline-block; margin-top: 12px; color: var(--lime); font-weight: 600; }
+
+.help-badge {
+  display: inline-block;
+  color: var(--pink);
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.help-sections details { border-top: 1px solid var(--line); padding: 11px 0; }
+.help-sections summary { cursor: pointer; font-weight: 600; }
+.help-sections details p { padding: 9px 0 0 16px; }
+.help-social dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 0; }
+.help-social dl div { padding: 11px; border: 1px solid var(--line); border-radius: 5px; }
+.help-social dt { font-weight: 700; }
+.help-social dd { margin: 4px 0 0; font-size: 12px; }
+
+@media (max-width: 850px) {
+  .footer-main { grid-template-columns: 1fr; gap: 26px; }
+}
+
+@media (max-width: 560px) {
+  .site-footer { margin-inline: 6%; padding-top: 28px; }
+  .footer-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 21px 16px; }
+  .footer-social nav { align-items: flex-start; flex-direction: column; }
+  .help-sections { grid-template-columns: 1fr; }
+  .help-social dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
