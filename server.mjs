@@ -2,8 +2,8 @@ import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 const root = new URL('./', import.meta.url);
-const files = {'/':'index.html','/index.html':'index.html','/styles.css':'styles.css','/app.js':'app.js'};
-const types = {html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8'};
+const files = {'/':'index.html','/index.html':'index.html','/styles.css':'styles.css','/app.js':'app.js','/admin':'admin.html','/admin.css':'admin.css','/admin.mjs':'admin.mjs','/admin-data.mjs':'admin-data.mjs','/admin-metrics.mjs':'admin-metrics.mjs'};
+const types = {html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8',mjs:'text/javascript; charset=utf-8'};
 const server = http.createServer(async(req,res)=>{
   const path = new URL(req.url,'http://localhost').pathname;
   const file=files[path];
